@@ -1,0 +1,78 @@
+<html>
+<body align=left>
+<div style="float:right">
+<button onclick='on_genAddress()'>Gen address</button>&nbsp;&nbsp; &nbsp;&nbsp;
+<button onclick='on_listAddress()'>List addresses</button><br>
+<textarea id=addrmsg readonly rows=5 cols=60></textarea>
+</div>
+From:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=text id=from value='' size=50><button onclick='on_getBalance("from")'>Balance</button><span id=Balance1></span><br>
+To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=text id=to value=''  size=50><button onclick='on_getBalance("to")'>Balance</button><span  id=Balance2></span><br>
+Amount: <input type=text id=amount value='' size=10>&nbsp;&nbsp;Data: <input type=text id=data value='' size=28></br>
+<button onclick='on_postMsg()'>Submit</button>&nbsp;&nbsp; &nbsp;&nbsp;
+<hr><div id=allmsg>
+<script>
+var xmlhttp=new XMLHttpRequest();
+xmlhttp.onreadystatechange=function()
+{ 
+	if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+		if(xmlhttp.responseText.length > 6 && xmlhttp.responseText.length < 120 )
+			document.getElementById('addrmsg').innerText=xmlhttp.responseText;
+		else
+			document.getElementById('allmsg').innerText=xmlhttp.responseText;
+    }
+}
+function on_postMsg(){
+	xmlhttp.open('POST','/post',true);
+	xmlhttp.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+	var sm = 'from=' + document.getElementById('from').value;
+	sm += '&to=' + document.getElementById('to').value;
+	sm += '&amount=' + document.getElementById('amount').value;
+	sm += '&data=' + document.getElementById('data').value;
+	//alert(sm);
+	xmlhttp.send(sm);
+}
+function refresh_message(){
+	xmlhttp.open('GET','/get',true);
+	xmlhttp.send();
+	setTimeout(refresh_message, 500);
+}
+
+setTimeout(refresh_message, 500);
+
+//---------------------------------------------------------------------------------------------
+var xmlhttp1=new XMLHttpRequest();
+xmlhttp1.onreadystatechange= function(){ procResponse(xmlhttp1,'addrmsg') }
+function on_genAddress(){
+	xmlhttp1.open('POST','/keygen',true);
+	xmlhttp1.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+	xmlhttp1.send('');
+}
+
+function on_listAddress(){
+	xmlhttp1.open('GET','/addrlist',true);
+	xmlhttp1.send('');
+}
+//-----------------------------------------------------------------------
+var BalanceHttp1=new XMLHttpRequest();
+BalanceHttp1.onreadystatechange= function(){ procResponse(BalanceHttp1,'Balance1') }
+var BalanceHttp2=new XMLHttpRequest();
+BalanceHttp2.onreadystatechange= function(){ procResponse(BalanceHttp2,'Balance2') }
+function on_getBalance(sid){
+	var addr = document.getElementById(sid).value;
+	var oHttp = BalanceHttp1
+	if(sid=="to") oHttp =  BalanceHttp2
+		
+	oHttp.open('GET','/getBalance?addr=' + addr,true);
+	oHttp.send();
+}
+
+function procResponse(ohttp,sid)
+{ 
+	if (ohttp.readyState==4 && ohttp.status==200) {
+        document.getElementById(sid).innerText=ohttp.responseText;
+    }
+}
+
+</script>
+</body>
+</html>
